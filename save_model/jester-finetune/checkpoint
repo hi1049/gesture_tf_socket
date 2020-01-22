@@ -1,0 +1,5 @@
+model_checkpoint_path: "step-9"
+all_model_checkpoint_paths: "step-0"
+all_model_checkpoint_paths: "step-1"
+all_model_checkpoint_paths: "step-2"
+all_model_checkpoint_paths: "step-3"

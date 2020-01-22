@@ -1,0 +1,13 @@
+Swiping Up
+Sliding Two Fingers Up
+Swiping Left
+Thumb Up
+Sliding Two Fingers Right
+Stop Sign
+Sliding Two Fingers Left
+Sliding Two Fingers Down
+Rolling Hand Backward
+Doing other things
+Swiping Right
+Swiping Down
+Thumb Down
