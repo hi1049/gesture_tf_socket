@@ -1,0 +1,4 @@
+source ~/.virtualenvs/gesture/bin/activate
+python flask_app.py
+python main_self_intro.py --debug 0
+
