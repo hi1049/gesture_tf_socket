@@ -112,5 +112,5 @@ def run_demo(activation, device, device_status, channel, vol):
 if __name__ == '__main__':
     model = TFModel()
     cam = RScam()
-    print(eval(cam.args.debug))
+    #print(eval(cam.args.debug))
     main_loop()
