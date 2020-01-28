@@ -89,7 +89,6 @@ def run_demo(activation, device, device_status, channel, vol):
         result = 'Waiting...'
 
     
-
     if not eval(cam.args.debug) and result != 'Waiting...':
         #print('control')
         # to main controller...
