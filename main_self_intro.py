@@ -5,6 +5,7 @@ import json
 import numpy as np
 import time
 
+
 def main_loop():
 
     device = 'Hue' # 'TV' or 'Aircon' or 'Hue'
