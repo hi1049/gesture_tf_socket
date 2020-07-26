@@ -141,169 +141,173 @@ class RScam:
         start_ix = -1
 
         while True:
-            if start_ix > self.args.video_length/2:
-                # if late firing -> no op
-                return []
+            try:
+                if start_ix > self.args.video_length/2:
+                    # if late firing -> no op
+                    return []
 
-            if cam < 10:
-                _, frame = self.cap.read()
-            elif cam > 10:
-                # Wait for a coherent pair of frames: depth and color
-                all_frames = self.pipeline.wait_for_frames()
-                color_frame = np.asanyarray(
-                    all_frames.get_color_frame().get_data()
-                )
+                if cam < 10:
+                    _, frame = self.cap.read()
+                elif cam > 10:
+                    # Wait for a coherent pair of frames: depth and color
+                    all_frames = self.pipeline.wait_for_frames()
+                    color_frame = np.asanyarray(
+                        all_frames.get_color_frame().get_data()
+                    )
 
-                if cam == 11 or cam == 12 or cam == 13:
-                    depth_frame = all_frames.get_depth_frame()
-                    if cam == 11:
-                        ir_frame1 = all_frames.get_infrared_frame(1)
-                        ir_frame2 = ir_frame1
-                    elif cam == 12:
-                        ir_frame2 = all_frames.get_infrared_frame(2)
-                        ir_frame1 = ir_frame2
-                    elif cam == 13:
-                        ir_frame1 = all_frames.get_infrared_frame(1)
-                        ir_frame2 = all_frames.get_infrared_frame(2)
+                    if cam == 11 or cam == 12 or cam == 13:
+                        depth_frame = all_frames.get_depth_frame()
+                        if cam == 11:
+                            ir_frame1 = all_frames.get_infrared_frame(1)
+                            ir_frame2 = ir_frame1
+                        elif cam == 12:
+                            ir_frame2 = all_frames.get_infrared_frame(2)
+                            ir_frame1 = ir_frame2
+                        elif cam == 13:
+                            ir_frame1 = all_frames.get_infrared_frame(1)
+                            ir_frame2 = all_frames.get_infrared_frame(2)
 
-                    if not depth_frame or not ir_frame1 or not ir_frame2:
-                        continue
+                        if not depth_frame or not ir_frame1 or not ir_frame2:
+                            continue
 
-                    # convert infrared images to numpy arrays
-                    if cam == 11:
-                        ir_image1 = np.asanyarray(ir_frame1.get_data())
-                        ir_image1 = cv2.cvtColor(ir_image1, cv2.COLOR_GRAY2BGR)
-                        frame = ir_image1
+                        # convert infrared images to numpy arrays
+                        if cam == 11:
+                            ir_image1 = np.asanyarray(ir_frame1.get_data())
+                            ir_image1 = cv2.cvtColor(ir_image1, cv2.COLOR_GRAY2BGR)
+                            frame = ir_image1
 
-                    elif cam == 12:
-                        ir_image2 = np.asanyarray(ir_frame2.get_data())
-                        ir_image2 = cv2.cvtColor(ir_image2, cv2.COLOR_GRAY2BGR)
-                        frame = ir_image2
-                        # frame = color_frame
+                        elif cam == 12:
+                            ir_image2 = np.asanyarray(ir_frame2.get_data())
+                            ir_image2 = cv2.cvtColor(ir_image2, cv2.COLOR_GRAY2BGR)
+                            frame = ir_image2
+                            # frame = color_frame
 
-                    elif cam == 13:
-                        ir_image2 = np.asanyarray(ir_frame2.get_data())
-                        ir_image2 = cv2.cvtColor(ir_image2, cv2.COLOR_GRAY2BGR)
-                        frame = ir_image2
+                        elif cam == 13:
+                            ir_image2 = np.asanyarray(ir_frame2.get_data())
+                            ir_image2 = cv2.cvtColor(ir_image2, cv2.COLOR_GRAY2BGR)
+                            frame = ir_image2
 
-            if not seq:
-                r = np_detect(self.yolo, self.meta, frame)
-
-            if r:
-                for i in range(0, len(r)):
-                    _, _, (_x, _y, _w, _h) = r[i]
-                    depth = depth_frame.get_distance(int(_x), int(_y))
-
-                    if self.args.person_detect == 'crop':
-                        if self.center_crop(_x):
-                            if 0.3<depth<1.5 and _w*_h>70000:
-                                self.center_detect = 1
-                                x, y, w, h = _x, _y, _w, _h
-
-                    elif self.args.person_detect == 'point':
-                        if self.center_point(_x,_y,self.args.pad):
-                            if 0.3<depth<1.5 and _w*_h>70000:
-                                self.center_detect = 1
-                                x, y, w, h = _x, _y, _w, _h
-
-            if self.args.test_mode == True:
-                #draw person center point
-                full_frame = copy.deepcopy(frame)
-                if self.args.cam > 10 and r:
-                    cv2.circle(full_frame, (int(x), int(y)), 5, (0, 0, 255), -1)
-                    cv2.putText(full_frame, ('depth : {0:.3f}'.format(depth_frame.get_distance(int(x), int(y)))), (int(x), int(y)), cv2.FONT_HERSHEY_COMPLEX_SMALL, 1,
-                                           (255, 255, 255, 2))
+                if not seq:
+                    r = np_detect(self.yolo, self.meta, frame)
 
                 if r:
-                    cv2.rectangle(full_frame, (int(x - w / 2), int(y - h / 2)), (int(x + w / 2), int(y + h / 2)),
-                                  (255, 0, 0), 2)
-                if self.args.person_detect == 'point':
-                    cv2.rectangle(full_frame, (int(self.args.frame_width / 2 - self.args.pad), int(self.args.frame_height / 2 - self.args.pad*2)), \
-                                  (int(self.args.frame_width / 2 + self.args.pad), int(self.args.frame_height / 2 + self.args.pad*2)),
-                                  (0, 0, 255), 2)
+                    for i in range(0, len(r)):
+                        _, _, (_x, _y, _w, _h) = r[i]
+                        depth = depth_frame.get_distance(int(_x), int(_y))
 
-                ret, jpeg = cv2.imencode('.jpg', cv2.resize(full_frame,(320,240)))
-                stream = jpeg.tobytes()
+                        if self.args.person_detect == 'crop':
+                            if self.center_crop(_x):
+                                if 0.3<depth<3 and _w*_h>40000:
+                                    self.center_detect = 1
+                                    x, y, w, h = _x, _y, _w, _h
 
-                # for ROI streaming
-                requests.post('http://127.0.0.1:5000/update_stream', data=stream)
+                        elif self.args.person_detect == 'point':
+                            if self.center_point(_x,_y,self.args.pad):
+                                if 0.3<depth<3 and _w*_h>40000:
+                                    self.center_detect = 1
+                                    x, y, w, h = _x, _y, _w, _h
 
-                # cv2.imshow('roi', full_frame)
-                # cv2.waitKey(1)
+                if self.args.test_mode == True:
+                    #draw person center point
+                    full_frame = copy.deepcopy(frame)
+                    if self.args.cam > 10 and r:
+                        cv2.circle(full_frame, (int(x), int(y)), 5, (0, 0, 255), -1)
+                        cv2.putText(full_frame, ('depth : {0:.3f}'.format(depth_frame.get_distance(int(x), int(y)))), (int(x), int(y)), cv2.FONT_HERSHEY_COMPLEX_SMALL, 1,
+                                            (255, 255, 255, 2))
 
-            ymin, ymax, xmin, xmax = int(y-h/2+2), int(y+h/2-2), int(x-w/2+2), int(x+w/2-2)
+                    if r:
+                        cv2.rectangle(full_frame, (int(x - w / 2), int(y - h / 2)), (int(x + w / 2), int(y + h / 2)),
+                                    (255, 0, 0), 2)
+                    if self.args.person_detect == 'point':
+                        cv2.rectangle(full_frame, (int(self.args.frame_width / 2 - self.args.pad), int(self.args.frame_height / 2 - self.args.pad*2)), \
+                                    (int(self.args.frame_width / 2 + self.args.pad), int(self.args.frame_height / 2 + self.args.pad*2)),
+                                    (0, 0, 255), 2)
 
-            if xmin <= 0: xmin = 2
-            if ymin <= 0: ymin = 2
-            if xmax >= self.args.frame_width: xmax = self.args.frame_width - 2
-            if ymax >= self.args.frame_height: ymax = self.args.frame_height - 2
+                    ret, jpeg = cv2.imencode('.jpg', cv2.resize(full_frame,(320,240)))
+                    stream = jpeg.tobytes()
 
-            if ymin > 0 and xmin > 0 and ymin < ymax and xmin < xmax:
-                frame = frame[ymin:int(ymin+float(h)*3/5), xmin:xmax] # extend for x-axis
+                    # for ROI streaming
+                    requests.post('http://127.0.0.1:5000/update_stream', data=stream)
 
-            try:
-                resize_frame = cv2.resize(frame, (224, 224))
-            except:
-                continue
+                    # cv2.imshow('roi', full_frame)
+                    # cv2.waitKey(1)
 
-            if self.args.motion_detect == 'diff':
-                cropped_frame = copy.deepcopy(frame)
-                # cropped_frame = cropped_frame[int(cropped_frame.shape[0]*3./5):int(cropped_frame.shape[0]),int(cropped_frame.shape[1]*1./5):int(cropped_frame.shape[1]*4./5)]
-                cropped_frame = cropped_frame[int(cropped_frame.shape[0]*3./5):int(cropped_frame.shape[0])]
+                ymin, ymax, xmin, xmax = int(y-h/2+2), int(y+h/2-2), int(x-w/2+2), int(x+w/2-2)
 
-                self.cropped_frame = cropped_frame
+                if xmin <= 0: xmin = 2
+                if ymin <= 0: ymin = 2
+                if xmax >= self.args.frame_width: xmax = self.args.frame_width - 2
+                if ymax >= self.args.frame_height: ymax = self.args.frame_height - 2
 
+                if ymin > 0 and xmin > 0 and ymin < ymax and xmin < xmax:
+                    frame = frame[ymin:int(ymin+float(h)*3/5), xmin:xmax] # extend for x-axis
 
-            if (self.center_detect == 1) or self.args.person_detect == 'None':
+                try:
+                    resize_frame = cv2.resize(frame, (224, 224))
+                except:
+                    continue
+
                 if self.args.motion_detect == 'diff':
-                    try:
-                        if not self.move_detect:
-                            seq.append(resize_frame)
-                            cropped_frames.append(cropped_frame)
-                            diff_len = 2
-                            if len(seq) > diff_len:
-                                prev_gray_frame = cv2.cvtColor(cropped_frames[0], cv2.COLOR_BGR2GRAY)
-                                gray_frame = cv2.cvtColor(cropped_frames[num_frame], cv2.COLOR_BGR2GRAY)
+                    cropped_frame = copy.deepcopy(frame)
+                    # cropped_frame = cropped_frame[int(cropped_frame.shape[0]*3./5):int(cropped_frame.shape[0]),int(cropped_frame.shape[1]*1./5):int(cropped_frame.shape[1]*4./5)]
+                    cropped_frame = cropped_frame[int(cropped_frame.shape[0]*3./5):int(cropped_frame.shape[0])]
 
-                                #gray_frame = cv2.GaussianBlur(gray_frame, (21, 21), 0)
+                    self.cropped_frame = cropped_frame
 
-                                frame_diff = cv2.absdiff(gray_frame, prev_gray_frame)
-                                diff_mask = np.array(frame_diff>25, dtype=np.int32)
 
-                                if self.args.cam >= 10:
-                                    #thresh1 = 5-2*abs(math.log10(60*depth_frame.get_distance(int(x), int((y)))+30))
-                                    #thresh2 = 1.0#*np.exp(-0.2*depth_frame.get_distance(int(x), int((y))))
-                                    #if thresh1 < 0: thresh1 = 0
-                                    crop_area = reduce(lambda x,y: x*y, gray_frame.shape)
-                                    dist_w = 0.1*np.exp(-0.2*depth_frame.get_distance(int(x), int((y))))
-                                    thresh = dist_w*crop_area
+                if (self.center_detect == 1) or self.args.person_detect == 'None':
+                    if self.args.motion_detect == 'diff':
+                        try:
+                            if not self.move_detect:
+                                seq.append(resize_frame)
+                                cropped_frames.append(cropped_frame)
+                                diff_len = 2
+                                if len(seq) > diff_len:
+                                    prev_gray_frame = cv2.cvtColor(cropped_frames[0], cv2.COLOR_BGR2GRAY)
+                                    gray_frame = cv2.cvtColor(cropped_frames[num_frame], cv2.COLOR_BGR2GRAY)
 
-                                else:
-                                    thresh = 4
+                                    #gray_frame = cv2.GaussianBlur(gray_frame, (21, 21), 0)
 
-                                if np.sum(diff_mask) >= thresh:
-                                        start_ix = self.fire(seq, start_ix)
+                                    frame_diff = cv2.absdiff(gray_frame, prev_gray_frame)
+                                    diff_mask = np.array(frame_diff>25, dtype=np.int32)
 
-                            num_frame += 1
-                            if len(seq) > diff_len+1:
-                                seq = []
-                                cropped_frames = []
-                                num_frame = 0
+                                    if self.args.cam >= 10:
+                                        #thresh1 = 5-2*abs(math.log10(60*depth_frame.get_distance(int(x), int((y)))+30))
+                                        #thresh2 = 1.0#*np.exp(-0.2*depth_frame.get_distance(int(x), int((y))))
+                                        #if thresh1 < 0: thresh1 = 0
+                                        crop_area = reduce(lambda x,y: x*y, gray_frame.shape)
+                                        dist_w = 0.1*np.exp(-0.2*depth_frame.get_distance(int(x), int((y))))
+                                        thresh = dist_w*crop_area
 
-                        else:
-                            seq.append(resize_frame)
+                                    else:
+                                        thresh = 4
 
-                    except:
-                        pass
+                                    if np.sum(diff_mask) >= thresh:
+                                            start_ix = self.fire(seq, start_ix)
 
-                elif self.args.motion_detect == 'None':
-                    seq.append(resize_frame)
+                                num_frame += 1
+                                if len(seq) > diff_len+1:
+                                    seq = []
+                                    cropped_frames = []
+                                    num_frame = 0
 
-                if len(seq) > num:
-                    if cam < 10:
-                        self.cap.release()
-                    return seq
+                            else:
+                                seq.append(resize_frame)
 
+                        except:
+                            pass
+
+                    elif self.args.motion_detect == 'None':
+                        seq.append(resize_frame)
+
+                    if len(seq) > num:
+                        if cam < 10:
+                            self.cap.release()
+                        return seq
+           except:
+               print('error. try reconnection')
+               # self.device.hardware_reset() # check usage
+               
     def __del__(self):
         if self.pipeline:
             self.pipeline.stop()
