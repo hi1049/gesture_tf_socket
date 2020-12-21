@@ -2,13 +2,30 @@
 
 ------------------------------------------------------
 
+
+
+## 0. OPERATOR MANUAL
+
+* 이 문서는 이 프로그램을 운용하는 운영자를 위한 설명서입니다.
+* Ubuntu 16.04, 18.04 버전에서 동작을 확인했습니다.
+* Docker 컨테이너를 사용하므로 PC에 Docker가 설치되어 있어야만 합니다.
+* 프로그램이 동작하는 PC에 반드시 webcam이 연결되어 있어야 합니다.
+* NVIDIA CUDA 8, CuDNN 7 버전대에서 동작함을 확인했습니다.
+
+
+
+
+
 ## 1. Version info
 
 * Python :  2.7.12
 * CUDA : 8.x
 * CuDNN : 7.x
 * Ubuntu 18.04
-* Any webcam
+* Docker
+* 프로그램이 동작하는 PC에 반드시 webcam이 연결되어 있어야 합니다.
+
+
 
 
 
@@ -21,6 +38,8 @@ git clone  https://github.com/hi1049/gesture_tf_socket.git
 ```
 
 <img src="/home/woongjae/D_4000/project/gesture_tf_socket/samples/install.png" alt="install" style="zoom:100%;" />
+
+
 
 
 
@@ -56,6 +75,8 @@ sh run_main_gesture_and_control.sh
 
 
 
+
+
 ## 4. Supported Gesture List
 
 ``` python
@@ -74,6 +95,8 @@ Swiping Right
 Swiping Down
 Thumb Down
 ```
+
+
 
 
 
