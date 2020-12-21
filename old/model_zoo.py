@@ -7,16 +7,11 @@ from stn import spatial_transformer_network as transformer
 def preprocess(inps, batch_size, is_training):
     _shape = tf.shape(inps)
     l, h, w = tf.unstack(_shape[1:-1])
-    #h_1 = tf.to_int32((h - 224) / 2)
-    #h_2 = tf.to_int32((h + 224) / 2)
-    #h_3 = tf.to_int32((w - 224) / 2)
-    #h_4 = tf.to_int32((w + 224) / 2)
 
     # first, crop it randomly
     crop_inputs = tf.cond(is_training,
                           lambda: tf.random_crop(inps, tf.unstack(_shape[:2]) + [224, 224, 3]),
-                          #lambda: inps[:, :, h_1:h_2, h_3:h_4])
-						  lambda: inps[:, :, (h - 224) / 2:(h + 224) / 2, (w - 224) / 2:(w + 224) / 2])
+                          lambda: inps[:, :, (h - 224) / 2:(h + 224) / 2, (w - 224) / 2:(w + 224) / 2])
     crop_inputs = tf.reshape(crop_inputs, (batch_size, -1, 224, 224, 3))  # for channel dimension restore
 
     processed_inputs_trans = []
