@@ -2,6 +2,16 @@
 
 ------------------------------------------------------
 
+
+
+## 0. USER MANUAL
+
+* 이 문서는 프로그램을 사용하는 사용자를 위한 설명서입니다.
+
+
+
+
+
 ## 1. Version info
 
 * Python :  2.7.12
@@ -9,6 +19,8 @@
 * CuDNN : 7.x
 * Ubuntu 18.04
 * Any webcam
+
+
 
 
 
@@ -21,6 +33,8 @@ git clone  https://github.com/hi1049/gesture_tf_socket.git
 ```
 
 <img src="/home/woongjae/D_4000/project/gesture_tf_socket/samples/install.png" alt="install" style="zoom:100%;" />
+
+
 
 
 
@@ -74,6 +88,8 @@ Swiping Right
 Swiping Down
 Thumb Down
 ```
+
+
 
 
 
